@@ -1,10 +1,10 @@
-use walkdir::WalkDir;
-use std::path::Path;
-fn main() {
-    for file in WalkDir::new("./md").into_iter().filter_map(|file| file.ok()) {
-        if (file.metadata().unwrap().is_file() && file.path().extension().unwrap() == "md") {
-            // ONLY GET MD files!!!
-            println!("{}", file.path().display());
-        }
-    }
+use actix_files as fs;
+use actix_web::{App, HttpServer};
+
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
+    HttpServer::new(|| App::new().service(fs::Files::new("/", "./src/md").show_files_listing()))
+        .bind(("127.0.0.1", 8080))?
+        .run()
+        .await
 }

@@ -7,3 +7,5 @@ edition = "2021"
 
 [dependencies]
 walkdir = "2.3.2"
+actix-web = "4"
+actix-files = "0.6.2"
