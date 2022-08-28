@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title> Caret's Blog</title>
+    <meta content="Caret's Blog" property="og:title"/>
+    <meta content="Site Description" property="og:description" />
+    <meta content="" property="og:url" />
+    <meta content="" property="og:image" />
+    <meta content="#ffa500" data-react-helmet="true" name="theme-color" />
+    <meta charset="UTF-8"/>
+    <link rel="stylesheet" href="./static/css/styles.css">
+  </head>
+  <body>
+    <h1>{{project_name}}</h1>
+    <section class="posts">
+      {{#each books}}
+        <article class="post">
+          <h3>{{this.name}}</h3>
+        </article>
+      {{/each}}
+    </section>
+  </body>
+</html>
