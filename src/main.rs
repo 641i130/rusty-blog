@@ -16,16 +16,19 @@ use serde_json::json;
 // Macro documentation can be found in the actix_web_codegen crate
 #[get("/")]
 async fn index(hb: web::Data<Handlebars<'_>>) -> HttpResponse {
-    let mut files = Vec::new(); // Init list of files
+    //let mut files = Vec::new(); // Init list of files
     // Find all MD files
-    for file in WalkDir::new("./md").into_iter().filter_map(|file| file.ok()) {
-        if file.metadata().unwrap().is_file() && file.path().extension().unwrap() == "md" {
-            match file.file_name().to_str() {
+    //let files: Vec<String> = std::fs::read_dir("./md").unwrap().map(|dir_entry| dir_entry.unwrap().path().to_str().unwrap().to_owned()).collect();
+    let files: Vec<String> = WalkDir::new("./md").into_iter().filter(|dir_entry| dir_entry.as_ref().unwrap().path().is_file()).map(|dir_entry| dir_entry.unwrap().path().to_str().unwrap().to_owned()).collect(); 
+    //for file in WalkDir::new("./md").into_iter().filter_map(|file| file.ok()) {
+        //if file.metadata().unwrap().is_file() && file.path().extension().unwrap() == "md" {
+            //println!("{:?}",file.to_string_lossy().into_owned());
+            /*match file.file_name().to_str() {
                 Some(name) => files.push(name.to_owned()),
                 _ => println!("odd file error"),
-            }
-        }
-    }
+            }*/
+        //}
+   // }
     println!("{:?}",&files);
     // Put the files array into JSON format for the HTML render
     let data = json!({
