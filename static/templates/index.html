@@ -2,13 +2,19 @@
 <html>
   <head>
     <title> Caret's Blog</title>
+    <meta charset="UTF-8"/>
+    <link rel="stylesheet" href="./static/css/style.css">
+    <!--Embedded stuff for twitter/discord/youtube etc-->
     <meta content="Caret's Blog" property="og:title"/>
     <meta content="Site Description" property="og:description" />
     <meta content="" property="og:url" />
     <meta content="" property="og:image" />
-    <meta content="#ffa500" data-react-helmet="true" name="theme-color" />
-    <meta charset="UTF-8"/>
-    <link rel="stylesheet" href="./static/css/style.css">
+    <meta content="#ff8500" data-react-helmet="true" name="theme-color" />
+    <!--Favicon stuff-->
+    <link rel="apple-touch-icon" sizes="180x180" href="./static/images/favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="./static/images/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="./static/images/favicon/favicon-16x16.png">
+    <link rel="manifest" href="./static/images/favicon/site.webmanifest">
   </head>
   <body>
     <h1>{{name}}</h1>
@@ -16,6 +22,7 @@
       {{#each posts}}
         <article class="post">
           <h3>{{this.title}}</h3>
+          <p>Created at {{this.created}} by {{this.author}}</p>
         </article>
       {{/each}}
     </section>

@@ -1,7 +1,12 @@
 use std::io;
 use walkdir::WalkDir;
-use std::path::Path;
-use std::ffi::OsStr;
+use actix_files::{Files, NamedFile};
+use chrono::prelude::*;
+use chrono::prelude::DateTime;
+use chrono::Utc;
+use std::time::{SystemTime, UNIX_EPOCH, Duration};
+
+use std::fs;
 use actix_web::{
     body::BoxBody,
     dev::ServiceResponse,
@@ -32,31 +37,35 @@ pub struct Post {
 // Macro documentation can be found in the actix_web_codegen crate
 #[get("/")]
 async fn index(hb: web::Data<Handlebars<'_>>) -> HttpResponse {
-    // Lovely cursed map statements
+    
+    // Basic logic here:
+    // Every post is an object
+    // Each post has all that struct info
+    // All the posts make up the blog (TODO rename)
+    // In the blog it has basic info and stuff about all the posts
     let files: Vec<String> = WalkDir::new("./md").into_iter().filter(|dir_entry| dir_entry.as_ref().unwrap().path().is_file()).map(|dir_entry| dir_entry.unwrap().path().to_str().unwrap().to_owned()).collect(); 
     let mut posts: Vec<Post> = Vec::new();
     for f in &files {
+        let attr = fs::metadata(f).unwrap().created().unwrap();
+        let datetime = DateTime::<Utc>::from(attr);
+        let newdate = datetime.format("%H:%M %d-%m-%Y").to_string();
+        // println!("{:?}",newdate.to_string());
         posts.push(Post {
             title: f.to_owned(),
-            created: "2021/06/24".to_string(),
+            created: newdate.to_string(),
             link: "path_here_i_think".to_string(),
             description: "brief_summary".to_string(),
             content: "to_be_determined".to_string(),
             author: "caret".to_string(),
         })
-        //posts.push(("path".to_string(),f.to_owned()));
     }
     // Put the files array into JSON format for the HTML render
     let all_posts = Posts {
         name: "Blog Posts:".to_string(),
         posts: posts,
     };
-    let json = serde_json::to_string(&all_posts);
     let data = json!(&all_posts);
-    println!("{:?}",json);
-    println!("{:?}",data);
     let body = hb.render("index", &data).unwrap();
-    println!("\n\n\n");
     HttpResponse::Ok().body(body)
 }
 
@@ -136,10 +145,11 @@ async fn main() -> io::Result<()> {
         App::new()
             .wrap(error_handlers())
             .app_data(handlebars_ref.clone())
+            .service(Files::new("/static", "static").show_files_listing())
             .service(index)
             .service(user)
     })
-    .bind(("127.0.0.1", 8080))?
+    .bind(("0.0.0.0", 38080))?
     .run()
     .await
 }
