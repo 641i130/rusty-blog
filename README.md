@@ -1,17 +1,17 @@
-# Handlebars
+# rusty-blog
 
-This is an example of how to use Actix Web with the [Handlebars](https://crates.io/crates/handlebars) templating language, which is currently the most popular crate that achieves this.
+This was/is written for me to practice Rust. I also just wanted a fast, lightweight, safe way to start blogging, without any PHP bloat `\s`. I plan to start writting some more higher-level blog posts on things I do for fun... I do a bit too many projects too, so maybe that'll be interesting to read through.
 
-## Usage
+# General usage:
+- Have a folder full of random markdown files
+- Throw the folder in this webserver structure; it'll automatically convert the MD files to HTML and structure it into an HTML list page, by creation date of the files
 
-```sh
-cd templating/handlebars
-cargo run
-```
+# Dev notes:
+Actix has a cool logging system... I plan to incorporate useragent/ip fingerprinting counting or something of the like. Maybe some built in filtering if thats possible... Not too sure yet.
 
-After starting the server, you may visit the following pages:
 
-- http://localhost:8080
-- http://localhost:8080/Emma/documents
-- http://localhost:8080/Bob/passwords
-- http://localhost:8080/some-non-existing-page - 404 error rendered using template
+
+# Credits:
+- https://dev.to/michaelin007/creating-a-web-page-with-actix-web-rust--2agd
+- https://jesselawson.org/rust/getting-started-with-rust-by-building-a-tiny-markdown-compiler/
+- Everyone that helped me with smaller issues in the Rust Discord server!!! Love you all :)
