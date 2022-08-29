@@ -12,31 +12,51 @@ use actix_web::{
 };
 use handlebars::Handlebars;
 use serde_json::json;
+use serde::{Serialize, Deserialize};
+
+#[derive(Serialize, Deserialize)]
+pub struct Posts {
+    name: String,
+    posts: Vec<Post>
+}
+#[derive(Serialize, Deserialize)]
+pub struct Post {
+    title: String,
+    created: String,
+    link: String,
+    description: String,
+    content: String,
+    author: String,
+}
 
 // Macro documentation can be found in the actix_web_codegen crate
 #[get("/")]
 async fn index(hb: web::Data<Handlebars<'_>>) -> HttpResponse {
-    //let mut files = Vec::new(); // Init list of files
-    // Find all MD files
-    //let files: Vec<String> = std::fs::read_dir("./md").unwrap().map(|dir_entry| dir_entry.unwrap().path().to_str().unwrap().to_owned()).collect();
+    // Lovely cursed map statements
     let files: Vec<String> = WalkDir::new("./md").into_iter().filter(|dir_entry| dir_entry.as_ref().unwrap().path().is_file()).map(|dir_entry| dir_entry.unwrap().path().to_str().unwrap().to_owned()).collect(); 
-    //for file in WalkDir::new("./md").into_iter().filter_map(|file| file.ok()) {
-        //if file.metadata().unwrap().is_file() && file.path().extension().unwrap() == "md" {
-            //println!("{:?}",file.to_string_lossy().into_owned());
-            /*match file.file_name().to_str() {
-                Some(name) => files.push(name.to_owned()),
-                _ => println!("odd file error"),
-            }*/
-        //}
-   // }
-    println!("{:?}",&files);
+    let mut posts: Vec<Post> = Vec::new();
+    for f in &files {
+        posts.push(Post {
+            title: f.to_owned(),
+            created: "2021/06/24".to_string(),
+            link: "path_here_i_think".to_string(),
+            description: "brief_summary".to_string(),
+            content: "to_be_determined".to_string(),
+            author: "caret".to_string(),
+        })
+        //posts.push(("path".to_string(),f.to_owned()));
+    }
     // Put the files array into JSON format for the HTML render
-    let data = json!({
-        "name": "Blog",
-        // insert all MD posts
-    });
+    let all_posts = Posts {
+        name: "Blog Posts:".to_string(),
+        posts: posts,
+    };
+    let json = serde_json::to_string(&all_posts);
+    let data = json!(&all_posts);
+    println!("{:?}",json);
+    println!("{:?}",data);
     let body = hb.render("index", &data).unwrap();
-
+    println!("\n\n\n");
     HttpResponse::Ok().body(body)
 }
 

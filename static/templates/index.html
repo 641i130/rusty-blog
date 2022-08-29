@@ -8,14 +8,14 @@
     <meta content="" property="og:image" />
     <meta content="#ffa500" data-react-helmet="true" name="theme-color" />
     <meta charset="UTF-8"/>
-    <link rel="stylesheet" href="./static/css/styles.css">
+    <link rel="stylesheet" href="./static/css/style.css">
   </head>
   <body>
-    <h1>{{project_name}}</h1>
+    <h1>{{name}}</h1>
     <section class="posts">
-      {{#each books}}
+      {{#each posts}}
         <article class="post">
-          <h3>{{this.name}}</h3>
+          <h3>{{this.title}}</h3>
         </article>
       {{/each}}
     </section>

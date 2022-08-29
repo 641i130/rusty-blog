@@ -4,7 +4,8 @@ version = "1.0.0"
 edition = "2021"
 
 [dependencies]
+serde = { version = "1.0.144", features = ["derive"] }
 actix-web = "4"
 handlebars = { version = "4.2.1", features = ["dir_source"] }
 serde_json = "1.0"
- walkdir = "2.3.2"
+walkdir = "2.3.2"
