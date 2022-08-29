@@ -1,12 +1,10 @@
 use std::io;
 use walkdir::WalkDir;
-use actix_files::{Files, NamedFile};
-use chrono::prelude::*;
+use actix_files::{Files};
 use chrono::prelude::DateTime;
 use chrono::Utc;
-use std::time::{SystemTime, UNIX_EPOCH, Duration};
 use actix_web::{middleware::Logger};
-
+use log::{debug, error, log_enabled, info, Level};
 use std::fs;
 use actix_web::{
     body::BoxBody,
@@ -19,6 +17,87 @@ use actix_web::{
 use handlebars::Handlebars;
 use serde_json::json;
 use serde::{Serialize, Deserialize};
+use std::io::{BufRead, BufReader};
+
+use std::path::Path;
+use std::fs::File;
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Post processor for the markdown files
+
+async fn convert(md_file:&str) -> String {
+    // Create a path variable from the filename
+    let input_filename = Path::new(md_file);
+    // Try to open the file
+    let file = File::open(&input_filename).expect("[ ERROR ] Failed to open file!");
+    // Create a place to store all our tokens
+    let mut tokens: Vec<String> = Vec::new();
+    // Read the file line-by-line
+    let reader = BufReader::new(file);
+    let mut ptag: bool = false; // keep track of paragraph enclosures
+    let mut htag: bool = false;
+    let mut out = String::new();
+    for line in reader.lines() {
+        let line_contents = line.unwrap();
+        let mut first_char: Vec<char> = line_contents.chars().take(1).collect();
+        // Now check the first character to for headings
+        let mut s = String::new();
+        let slice = &line_contents.to_string();
+        match first_char.pop() {
+            Some('#') => {
+            if ptag {
+                ptag = false;
+                s.push_str("</p>\n"); // adding \n for instructional clarity
+            } 
+            if htag {
+                htag = false;
+                s.push_str("</h1>\n"); // close it if we're already open
+            }
+
+            htag = true;
+            s.push_str("<h1>");
+            s.push_str(&slice[2..]); // Get all but the first two characters
+            },
+            
+            _ => {
+            if htag {
+                htag = false;
+                s.push_str("</h1>\n");
+            }
+            
+            if !ptag {
+                ptag = true;
+                s.push_str("<p>");
+            } 
+
+            s.push_str(&slice);
+            
+            }
+        };
+
+        // At the very end, check if any of the tag bools are still open. If so,
+        // close them.
+        if htag {
+            htag = false;
+            s.push_str("</h1>\n");      
+        }
+
+        if ptag {
+            ptag = false;
+            s.push_str("</p>\n");
+        }
+
+        // Don't push blank lines
+        if s != "<p></p>\n" {
+            tokens.push(s.to_owned());
+        }
+        out.push_str(&format!("{}", s));
+    }
+    // Convert it to basic HTML to be used in the content bit of the Post struct
+    // Add proper class / id data too
+    //"TODO".to_string()
+    return out
+}
 
 #[derive(Serialize, Deserialize)]
 pub struct Posts {
@@ -49,15 +128,13 @@ async fn index(hb: web::Data<Handlebars<'_>>) -> HttpResponse {
     let mut posts: Vec<Post> = Vec::new();
     for f in &files {
         let attr = fs::metadata(f).unwrap().created().unwrap();
-        let datetime = DateTime::<Utc>::from(attr);
-        let newdate = datetime.format("%H:%M %d-%m-%Y").to_string();
-        // println!("{:?}",newdate.to_string());
+        let created_date = DateTime::<Utc>::from(attr).format("%H:%M %d-%m-%Y").to_string();
         posts.push(Post {
             title: f.to_owned(),
-            created: newdate.to_string(),
+            created: created_date.to_string(),
             link: "path_here_i_think".to_string(),
             description: "brief_summary".to_string(),
-            content: "to_be_determined".to_string(),
+            content: convert(&f).await, // READ FILE IN HERE!!!!
             author: "caret".to_string(),
         })
     }
