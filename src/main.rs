@@ -5,6 +5,7 @@ use chrono::prelude::*;
 use chrono::prelude::DateTime;
 use chrono::Utc;
 use std::time::{SystemTime, UNIX_EPOCH, Duration};
+use actix_web::{middleware::Logger};
 
 use std::fs;
 use actix_web::{
@@ -43,6 +44,7 @@ async fn index(hb: web::Data<Handlebars<'_>>) -> HttpResponse {
     // Each post has all that struct info
     // All the posts make up the blog (TODO rename)
     // In the blog it has basic info and stuff about all the posts
+    //let files: Vec<String> = WalkDir::new("./md").into_iter().filter(|dir_entry| dir_entry.as_ref().unwrap().path().is_file()).map(|dir_entry| dir_entry.unwrap().path().to_str().unwrap().to_owned()).collect(); 
     let files: Vec<String> = WalkDir::new("./md").into_iter().filter(|dir_entry| dir_entry.as_ref().unwrap().path().is_file()).map(|dir_entry| dir_entry.unwrap().path().to_str().unwrap().to_owned()).collect(); 
     let mut posts: Vec<Post> = Vec::new();
     for f in &files {
@@ -140,10 +142,14 @@ async fn main() -> io::Result<()> {
         .register_templates_directory(".html", "./static/templates")
         .unwrap();
     let handlebars_ref = web::Data::new(handlebars);
-
+    // Enable logs
+    env_logger::init_from_env(env_logger::Env::new().
+    default_filter_or("info"));
+    // Make server
     HttpServer::new(move || {
         App::new()
             .wrap(error_handlers())
+            .wrap(Logger::new("%a '%r' %s %b '%{Referer}i' '%{User-Agent}i' %T").log_target("http_log"))
             .app_data(handlebars_ref.clone())
             .service(Files::new("/static", "static").show_files_listing())
             .service(index)
