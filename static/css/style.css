@@ -1,6 +1,11 @@
 body {
-    background-color: black;
+    background-color: #161616;
     color: #ff8500;
     font-family: monospace;
     font-size: 150%;
+}
+code {
+    background-color: #181c2d;
+    color: #879ddc;
+    font: monospace !important;
 }

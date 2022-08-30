@@ -36,6 +36,7 @@ async fn convert(md_file:&str) -> String {
     let reader = BufReader::new(file);
     let mut ptag: bool = false; // keep track of paragraph enclosures
     let mut htag: bool = false;
+    let mut c_block: bool = false;
     let mut out = String::new();
     for line in reader.lines() {
         let line_contents = line.unwrap();
@@ -58,7 +59,6 @@ async fn convert(md_file:&str) -> String {
             s.push_str("<h1>");
             s.push_str(&slice[2..]); // Get all but the first two characters
             },
-            
             _ => {
             if htag {
                 htag = false;
@@ -74,7 +74,16 @@ async fn convert(md_file:&str) -> String {
             
             }
         };
-
+        let result = slice.find("```");
+        if result == Some(0) {
+            if !c_block {
+                s.push_str("<code>\n");
+                c_block = true;
+            } else {
+                s.push_str("</code>\n");
+                c_block = false;
+            }
+        }
         // At the very end, check if any of the tag bools are still open. If so,
         // close them.
         if htag {

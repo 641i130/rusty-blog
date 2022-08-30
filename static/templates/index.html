@@ -20,11 +20,11 @@
     <h1>{{name}}</h1>
     <section class="posts">
       {{#each posts}}
-        <article class="post">
+        <div class="post">
           <h3>{{this.title}}</h3>
           <p>Created at {{this.created}} by {{this.author}}</p>
           {{{this.content}}}
-        </article>
+        </div>
       {{/each}}
     </section>
   </body>
