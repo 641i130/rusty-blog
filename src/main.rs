@@ -40,33 +40,38 @@ async fn convert(md_file: &str) -> String {
         match slice {
             s if s.starts_with("#####") && !c_block => {
                 out_line.push_str("<h6>");
-                out_line.push_str(s);
+                out_line.push_str(&s[6..]);
                 out_line.push_str("</h6>");
             }
             s if s.starts_with("#####") && !c_block => {
                 out_line.push_str("<h5>");
-                out_line.push_str(s);
+                out_line.push_str(&s[5..]);
                 out_line.push_str("</h5>");
             }
             s if s.starts_with("####") && !c_block => {
                 out_line.push_str("<h4>");
-                out_line.push_str(s);
+                out_line.push_str(&s[4..]);
                 out_line.push_str("</h4>");
             }
             s if s.starts_with("###") && !c_block => {
                 out_line.push_str("<h3>");
-                out_line.push_str(s);
+                out_line.push_str(&s[3..]);
                 out_line.push_str("</h3>");
             }
             s if s.starts_with("##") && !c_block => {
                 out_line.push_str("<h2>");
-                out_line.push_str(s);
+                out_line.push_str(&s[2..]);
                 out_line.push_str("</h2>");
             }
             s if s.starts_with("#") && !c_block => {
                 out_line.push_str("<h1>");
-                out_line.push_str(s);
+                out_line.push_str(&s[1..]);
                 out_line.push_str("</h1>");
+            }
+            s if s.starts_with(">") && !c_block => {
+                out_line.push_str("<blockquote>");
+                out_line.push_str(&s[1..]);
+                out_line.push_str("</blockquote>");
             }
             s if s.starts_with("---") && !c_block => out_line.push_str("<hr>"),
 
