@@ -3,7 +3,7 @@
 This was primarily written for me to practice Rust and start prepping for the Rust course I'm taking. I also just wanted a fast, lightweight, safe way to start blogging, without any PHP bloat `\s`. Given the amount of free time you get during summer break, I somehow got this done in like 1.25 days. I'm pretty satisfied with the speed I wrote this. All the `.to_owned()` shows I think I'm getting a better hang of how the safety works in rust... Sort of... I think...😅 
 Other than that, Rust is amazing, just love the way it forces you to think, despite the difficulty in the beginning.
 
-I plan to start writting some more higher-level blog posts on things I do for fun... I do a bit too many projects too, so maybe that'll be interesting to read through.
+I plan to start writing some more higher-level blog posts on things I do for fun... I do a bit too many projects too, so maybe that'll be interesting to read through.
 
 # General usage:
 - Have a folder full of random markdown files

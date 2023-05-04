@@ -32,48 +32,60 @@ async fn convert(md_file: &str) -> String {
     // Create a place to store all our tokens
     let reader = BufReader::new(file);
     let mut c_block = false;
+    let mut ol_block = false;
+    let mut ul_block = false;
     for line in reader.lines() {
         let line_contents = line.unwrap();
         let mut out_line = String::new();
         let line_string = &line_contents.to_string();
         let slice = &line_string.clone();
         match slice {
-            s if s.starts_with("#####") && !c_block => {
+            s if s.starts_with("#####") && !c_block && !ol_block && !ul_block => {
                 out_line.push_str("<h6>");
                 out_line.push_str(&s[6..]);
                 out_line.push_str("</h6>");
             }
-            s if s.starts_with("#####") && !c_block => {
+            s if s.starts_with("#####") && !c_block && !ol_block && !ul_block => {
                 out_line.push_str("<h5>");
                 out_line.push_str(&s[5..]);
                 out_line.push_str("</h5>");
             }
-            s if s.starts_with("####") && !c_block => {
+            s if s.starts_with("####") && !c_block && !ol_block && !ul_block => {
                 out_line.push_str("<h4>");
                 out_line.push_str(&s[4..]);
                 out_line.push_str("</h4>");
             }
-            s if s.starts_with("###") && !c_block => {
+            s if s.starts_with("###") && !c_block && !ol_block && !ul_block => {
                 out_line.push_str("<h3>");
                 out_line.push_str(&s[3..]);
                 out_line.push_str("</h3>");
             }
-            s if s.starts_with("##") && !c_block => {
+            s if s.starts_with("##") && !c_block && !ol_block && !ul_block => {
                 out_line.push_str("<h2>");
                 out_line.push_str(&s[2..]);
                 out_line.push_str("</h2>");
             }
-            s if s.starts_with("#") && !c_block => {
+            s if s.starts_with("#") && !c_block && !ol_block && !ul_block => {
                 out_line.push_str("<h1>");
                 out_line.push_str(&s[1..]);
                 out_line.push_str("</h1>");
             }
-            s if s.starts_with(">") && !c_block => {
+            s if s.starts_with(">") && !c_block && !ol_block && !ul_block => {
                 out_line.push_str("<blockquote>");
                 out_line.push_str(&s[1..]);
                 out_line.push_str("</blockquote>");
             }
-            s if s.starts_with("---") && !c_block => out_line.push_str("<hr>"),
+            s if s.starts_with("*") || s.starts_with("-") && !c_block && !ol_block && !ul_block => {
+                if ul_block {
+                    ul_block = false;
+                    out_line.push_str("</ul>");
+                } else {
+                    out_line.push_str("<ul>");
+                    ul_block = true;
+                }
+                out_line.push_str(&s[1..]);
+            }
+            s if s.starts_with("---") && !c_block && !ol_block && !ul_block => out_line.push_str("<hr>"),
 
             s if s.starts_with("```") | s.starts_with("`") | s.starts_with("``") => {
                 if c_block {
