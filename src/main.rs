@@ -1,11 +1,5 @@
-use std::io;
-use walkdir::WalkDir;
-use actix_files::{Files};
-use chrono::prelude::DateTime;
-use chrono::Utc;
-use actix_web::{middleware::Logger};
-use log::{debug, error, log_enabled, info, Level};
-use std::fs;
+use actix_files::Files;
+use actix_web::middleware::Logger;
 use actix_web::{
     body::BoxBody,
     dev::ServiceResponse,
@@ -14,104 +8,109 @@ use actix_web::{
     middleware::{ErrorHandlerResponse, ErrorHandlers},
     web, App, HttpResponse, HttpServer, Result,
 };
+use chrono::prelude::DateTime;
+use chrono::Utc;
 use handlebars::Handlebars;
+use serde::{Deserialize, Serialize};
 use serde_json::json;
-use serde::{Serialize, Deserialize};
+use std::fs;
+use std::io;
 use std::io::{BufRead, BufReader};
+use walkdir::WalkDir;
 
-use std::path::Path;
 use std::fs::File;
+use std::path::Path;
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Post processor for the markdown files
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// Post processor for the markdown files
-
-async fn convert(md_file:&str) -> String {
-    // Create a path variable from the filename
-    let input_filename = Path::new(md_file);
-    // Try to open the file
+async fn convert(md_file: &str) -> String {
+    // This function converts markdown syntax into HTML
+    let mut out = String::new(); // HTML output
+    let input_filename = Path::new(md_file); //open file
     let file = File::open(&input_filename).expect("[ ERROR ] Failed to open file!");
     // Create a place to store all our tokens
-    let mut tokens: Vec<String> = Vec::new();
-    // Read the file line-by-line
     let reader = BufReader::new(file);
-    let mut ptag: bool = false; // keep track of paragraph enclosures
-    let mut htag: bool = false;
-    let mut c_block: bool = false;
-    let mut out = String::new();
+    let mut c_block = false;
     for line in reader.lines() {
         let line_contents = line.unwrap();
-        let mut first_char: Vec<char> = line_contents.chars().take(1).collect();
-        // Now check the first character to for headings
-        let mut s = String::new();
-        let slice = &line_contents.to_string();
-        match first_char.pop() {
-            Some('#') => {
-            if ptag {
-                ptag = false;
-                s.push_str("</p>\n"); // adding \n for instructional clarity
-            } 
-            if htag {
-                htag = false;
-                s.push_str("</h1>\n"); // close it if we're already open
+        let mut out_line = String::new();
+        let line_string = &line_contents.to_string();
+        let slice = &line_string.clone();
+        match slice {
+            s if s.starts_with("#####") && !c_block => {
+                out_line.push_str("<h6>");
+                out_line.push_str(s);
+                out_line.push_str("</h6>");
             }
+            s if s.starts_with("#####") && !c_block => {
+                out_line.push_str("<h5>");
+                out_line.push_str(s);
+                out_line.push_str("</h5>");
+            }
+            s if s.starts_with("####") && !c_block => {
+                out_line.push_str("<h4>");
+                out_line.push_str(s);
+                out_line.push_str("</h4>");
+            }
+            s if s.starts_with("###") && !c_block => {
+                out_line.push_str("<h3>");
+                out_line.push_str(s);
+                out_line.push_str("</h3>");
+            }
+            s if s.starts_with("##") && !c_block => {
+                out_line.push_str("<h2>");
+                out_line.push_str(s);
+                out_line.push_str("</h2>");
+            }
+            s if s.starts_with("#") && !c_block => {
+                out_line.push_str("<h1>");
+                out_line.push_str(s);
+                out_line.push_str("</h1>");
+            }
+            s if s.starts_with("---") && !c_block => out_line.push_str("<hr>"),
 
-            htag = true;
-            s.push_str("<h1>");
-            s.push_str(&slice[2..]); // Get all but the first two characters
-            },
+            s if s.starts_with("```") | s.starts_with("`") | s.starts_with("``") => {
+                if c_block {
+                    c_block = false;
+                    out_line.push_str("</pre></code>");
+                } else {
+                    let lang: String = s.split("```").collect();
+                    out_line.push_str(&format!("<pre><code class='language-{}'>", lang.to_string()));
+                    c_block = true;
+                }
+            }
             _ => {
-            if htag {
-                htag = false;
-                s.push_str("</h1>\n");
-            }
-            
-            if !ptag {
-                ptag = true;
-                s.push_str("<p>");
-            } 
-
-            s.push_str(&slice);
-            
-            }
-        };
-        let result = slice.find("```");
-        if result == Some(0) {
-            if !c_block {
-                s.push_str("<code>\n");
-                c_block = true;
-            } else {
-                s.push_str("</code>\n");
-                c_block = false;
+                if c_block {
+                    let lines: Vec<&str> = slice.split('\n').collect();
+                    for line in lines {
+                        let mut escaped_line = String::new();
+                        for c in line.chars() {
+                            match c {
+                                '<' => escaped_line.push_str("&lt;"),
+                                '>' => escaped_line.push_str("&gt;"),
+                                _ => escaped_line.push(c),
+                            }
+                        }
+                        out_line.push_str(&escaped_line);
+                        out_line.push('\n');
+                    }
+                } else {
+                    out_line.push_str("<p>");
+                    out_line.push_str(slice);
+                    out_line.push_str("</p>");
+                }
             }
         }
-        // At the very end, check if any of the tag bools are still open. If so,
-        // close them.
-        if htag {
-            htag = false;
-            s.push_str("</h1>\n");      
-        }
-
-        if ptag {
-            ptag = false;
-            s.push_str("</p>\n");
-        }
-
-        // Don't push blank lines
-        if s != "<p></p>\n" {
-            tokens.push(s.to_owned());
-        }
-        out.push_str(&format!("{}", s));
+        out.push_str(&format!("{}", out_line));
     }
-    // Convert it to basic HTML to be used in the content bit of the Post struct
-    // Add proper class / id data too
-    //"TODO".to_string()
-    return out
+    out
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct Posts {
     name: String,
-    posts: Vec<Post>
+    posts: Vec<Post>,
 }
 #[derive(Serialize, Deserialize)]
 pub struct Post {
@@ -126,14 +125,17 @@ pub struct Post {
 // Macro documentation can be found in the actix_web_codegen crate
 #[get("/")]
 async fn index(hb: web::Data<Handlebars<'_>>) -> HttpResponse {
-    
     // Basic logic here:
     // Every post is an object
     // Each post has all that struct info
     // All the posts make up the blog (TODO rename)
     // In the blog it has basic info and stuff about all the posts
-    //let files: Vec<String> = WalkDir::new("./md").into_iter().filter(|dir_entry| dir_entry.as_ref().unwrap().path().is_file()).map(|dir_entry| dir_entry.unwrap().path().to_str().unwrap().to_owned()).collect(); 
-    let files: Vec<String> = WalkDir::new("./md").into_iter().filter(|dir_entry| dir_entry.as_ref().unwrap().path().is_file()).map(|dir_entry| dir_entry.unwrap().path().to_str().unwrap().to_owned()).collect(); 
+    //let files: Vec<String> = WalkDir::new("./md").into_iter().filter(|dir_entry| dir_entry.as_ref().unwrap().path().is_file()).map(|dir_entry| dir_entry.unwrap().path().to_str().unwrap().to_owned()).collect();
+    let files: Vec<String> = WalkDir::new("./md")
+        .into_iter()
+        .filter(|dir_entry| dir_entry.as_ref().unwrap().path().is_file())
+        .map(|dir_entry| dir_entry.unwrap().path().to_str().unwrap().to_owned())
+        .collect();
     let mut posts: Vec<Post> = Vec::new();
     for f in &files {
         let attr = fs::metadata(f).unwrap().created().unwrap();
@@ -178,10 +180,7 @@ fn error_handlers() -> ErrorHandlers<BoxBody> {
 // Error handler for a 404 Page not found error.
 fn not_found<B>(res: ServiceResponse<B>) -> Result<ErrorHandlerResponse<BoxBody>> {
     let response = get_error_response(&res, "Page not found");
-    Ok(ErrorHandlerResponse::Response(ServiceResponse::new(
-        res.into_parts().0,
-        response.map_into_left_body(),
-    )))
+    Ok(ErrorHandlerResponse::Response(ServiceResponse::new(res.into_parts().0, response.map_into_left_body())))
 }
 
 // Generic error handler.
@@ -190,15 +189,9 @@ fn get_error_response<B>(res: &ServiceResponse<B>, error: &str) -> HttpResponse<
 
     // Provide a fallback to a simple plain text response in case an error occurs during the
     // rendering of the error page.
-    let fallback = |e: &str| {
-        HttpResponse::build(res.status())
-            .content_type(ContentType::plaintext())
-            .body(e.to_string())
-    };
+    let fallback = |e: &str| HttpResponse::build(res.status()).content_type(ContentType::plaintext()).body(e.to_string());
 
-    let hb = request
-        .app_data::<web::Data<Handlebars>>()
-        .map(|t| t.get_ref());
+    let hb = request.app_data::<web::Data<Handlebars>>().map(|t| t.get_ref());
     match hb {
         Some(hb) => {
             let data = json!({
@@ -208,9 +201,7 @@ fn get_error_response<B>(res: &ServiceResponse<B>, error: &str) -> HttpResponse<
             let body = hb.render("error", &data);
 
             match body {
-                Ok(body) => HttpResponse::build(res.status())
-                    .content_type(ContentType::html())
-                    .body(body),
+                Ok(body) => HttpResponse::build(res.status()).content_type(ContentType::html()).body(body),
                 Err(_) => fallback(error),
             }
         }
@@ -224,13 +215,10 @@ async fn main() -> io::Result<()> {
     // shared between the application threads, and is therefore passed to the
     // Application Builder as an atomic reference-counted pointer.
     let mut handlebars = Handlebars::new();
-    handlebars
-        .register_templates_directory(".html", "./static/templates")
-        .unwrap();
+    handlebars.register_templates_directory(".html", "./static/templates").unwrap();
     let handlebars_ref = web::Data::new(handlebars);
     // Enable logs
-    env_logger::init_from_env(env_logger::Env::new().
-    default_filter_or("info"));
+    env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
     // Make server
     HttpServer::new(move || {
         App::new()

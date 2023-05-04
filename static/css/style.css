@@ -1,11 +1,79 @@
-body {
-    background-color: #161616;
-    color: #ff8500;
-    font-family: monospace;
-    font-size: 150%;
+body,
+footer {
+	background-color: black;
+	color: #ff8500;
+	font-family: monospace;
+	font-size: 150%;
+	width: 50%;
+	margin-left: auto;
+	margin-right: auto;
+	display: block;
 }
-code {
-    background-color: #181c2d;
-    color: #879ddc;
-    font: monospace !important;
+
+/*  #Mobile 
+================================================== */
+@media only screen and (max-device-width: 600px) {
+
+	body,
+	footer {
+		margin-left: 5%;
+		margin-right: 5%;
+		width: 80%;
+		list-style-type: none;
+	}
+
+	svg {
+		font-size: 20%;
+		width: 4em;
+		height: 10%;
+		float: center;
+		margin: 4%;
+		vertical-align: center;
+	}
+}
+
+img {
+	border: 3px solid #ff8500;
+	border-radius: 100%;
+	float: left;
+	margin: 4%;
+}
+
+a {
+	color: #ffbe79;
+}
+
+#smol {
+	font-size: 80%;
+}
+
+#foot-text {
+	height: 0%;
+	color: #ffbe79;
+	font-size: 80%;
+	float: left;
+}
+
+svg {
+	font-size: 20%;
+	width: 4em;
+	float: center;
+	margin: 4%;
+	vertical-align: center;
+}
+
+.foot {
+	vertical-align: center;
+	position: center;
+	margin: 4%;
+	width: 100%;
+	text-align: center;
+}
+
+.socials {
+	color: black;
+}
+
+pre {
+	border-radius: 20px;
 }
