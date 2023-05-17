@@ -88,15 +88,15 @@ async fn convert(md_file: &str) -> String {
                 out_line.push_str(&format!("<a href=\"{}\">{}</a>", link, text));
             }
             s if s.starts_with("![") && s.ends_with(")") => {
-                let start_bracket = s.find('!').unwrap();
-                let end_bracket = s[start_bracket + 2..].find(']').unwrap();
+                let start_bracket = s.find('[').unwrap();
+                let end_bracket = s[start_bracket + 1..].find(']').unwrap();
                 let start_parenthesis = s[end_bracket + start_bracket + 2..].find('(').unwrap();
                 let end_parenthesis = s[end_bracket + start_bracket + start_parenthesis + 3..].find(')').unwrap();
 
                 let text = &s[start_bracket + 1..start_bracket + end_bracket + 1];
                 let link = &s[start_bracket + start_parenthesis + end_bracket + 3..start_bracket + start_parenthesis + end_bracket + end_parenthesis + 3];
 
-                out_line.push_str(&format!("<img href=\"{}\" title=\"{}\">", link, text));
+                out_line.push_str(&format!("<img src=\"{}\" title=\"{}\">", link, text));
             }
 
             s if s.starts_with("---") && s.ends_with("---") => out_line.push_str("<hr>"),
