@@ -32,13 +32,6 @@ footer {
 	}
 }
 
-img {
-	border: 3px solid #ff8500;
-	border-radius: 100%;
-	float: left;
-	margin: 4%;
-}
-
 a {
 	color: #ffbe79;
 }
